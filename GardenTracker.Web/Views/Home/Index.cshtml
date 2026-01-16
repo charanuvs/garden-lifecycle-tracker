@@ -1,0 +1,61 @@
+﻿@{
+    ViewData["Title"] = "Garden Lifecycle Tracker";
+}
+
+<div class="container mt-5">
+    <div class="text-center mb-5">
+        <h1 class="display-3">🌱 Garden Lifecycle Tracker</h1>
+        <p class="lead">Manage your garden crops with intelligent workflow tracking</p>
+    </div>
+
+    <div class="row mb-5">
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <h3>🌾 Track Crops</h3>
+                    <p>Monitor multiple crops simultaneously with concurrent workflow management</p>
+                    <a asp-controller="Crops" asp-action="Index" class="btn btn-primary">Browse Crops</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <h3>📋 Manage Tasks</h3>
+                    <p>Get automated task scheduling with smart date calculations</p>
+                    <a asp-controller="UserCrops" asp-action="Index" class="btn btn-primary">My Garden</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <h3>⚙️ Smart Workflows</h3>
+                    <p>Composable, parameterized workflows powered by finite state machines</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <h4>Features</h4>
+                    <ul>
+                        <li><strong>Reusable Workflow Steps:</strong> Define steps like "Watering", "Pruning", "Harvesting" once and reuse across different crops</li>
+                        <li><strong>Parameterized Workflows:</strong> Customize duration, frequency, and other parameters per crop type</li>
+                        <li><strong>Concurrent Execution:</strong> Run multiple workflow steps in parallel (e.g., water while weeding)</li>
+                        <li><strong>State Machine Powered:</strong> Robust state management using the Stateless library</li>
+                        <li><strong>Dependency Management:</strong> Define step dependencies to ensure proper sequencing</li>
+                        <li><strong>Date Calculation:</strong> Automatic scheduling of next tasks based on parameters</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="text-center mt-5">
+        <a asp-controller="Crops" asp-action="Index" class="btn btn-success btn-lg">Start Your First Crop</a>
+    </div>
+</div>

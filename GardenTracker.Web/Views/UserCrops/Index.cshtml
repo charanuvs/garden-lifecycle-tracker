@@ -1,0 +1,55 @@
+@model IEnumerable<GardenTracker.Domain.Entities.UserCrop>
+
+@{
+    ViewData["Title"] = "My Garden";
+}
+
+<div class="container mt-4">
+    <h1 class="mb-4">@ViewData["Title"]</h1>
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">
+            <h5>No crops yet!</h5>
+            <p>You haven't started growing any crops yet. <a asp-controller="Crops" asp-action="Index">Browse available crops</a> to get started.</p>
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            @foreach (var crop in Model)
+            {
+                <div class="col-md-4 mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>@crop.Nickname</h5>
+                            <small class="text-muted">@crop.CropDefinition.Name</small>
+                        </div>
+                        <div class="card-body">
+                            <p><strong>Started:</strong> @crop.StartDate.ToShortDateString()</p>
+                            <p>
+                                <span class="badge bg-success">Active</span>
+                            </p>
+                        </div>
+                        <div class="card-footer">
+                            <a asp-action="Details" asp-route-id="@crop.Id" class="btn btn-primary w-100">
+                                View Tasks
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+
+    <div class="mt-4">
+        <a asp-controller="Crops" asp-action="Index" class="btn btn-success">
+            <i class="bi bi-plus-circle"></i> Start New Crop
+        </a>
+    </div>
+</div>

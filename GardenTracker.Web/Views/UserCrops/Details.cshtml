@@ -1,0 +1,136 @@
+@model IEnumerable<GardenTracker.Domain.Entities.ActiveWorkflowStep>
+
+@{
+    ViewData["Title"] = "Workflow Tasks";
+}
+
+<div class="container mt-4">
+    <h1 class="mb-4">@ViewData["Title"]</h1>
+
+    <div class="mb-3">
+        <a asp-action="Index" class="btn btn-secondary">&larr; Back to My Garden</a>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-success">
+            <h5>All tasks completed! 🎉</h5>
+            <p>You've completed all workflow steps for this crop.</p>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info mb-4">
+            <strong>Next Steps:</strong> The tasks below are ready to start or are currently in progress.
+        </div>
+
+        @foreach (var step in Model)
+        {
+            var cardClass = step.CurrentState == GardenTracker.Domain.Enums.WorkflowStepState.InProgress 
+                ? "border-primary" 
+                : "border-secondary";
+            
+            <div class="card mb-3 @cardClass">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-0">@step.WorkflowStepDefinition.Name</h5>
+                        <small class="text-muted">@step.WorkflowStepDefinition.Description</small>
+                    </div>
+                    <span class="badge @(step.CurrentState == GardenTracker.Domain.Enums.WorkflowStepState.InProgress ? "bg-primary" : "bg-secondary")">
+                        @step.CurrentState
+                    </span>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p>
+                                <strong>Planned Start:</strong> 
+                                @(step.PlannedStartDate?.ToShortDateString() ?? "Not set")
+                            </p>
+                            @if (step.PlannedCompletionDate.HasValue)
+                            {
+                                <p>
+                                    <strong>Planned Completion:</strong> 
+                                    @step.PlannedCompletionDate.Value.ToShortDateString()
+                                </p>
+                            }
+                        </div>
+                        <div class="col-md-6">
+                            @if (step.ActualStartDate.HasValue)
+                            {
+                                <p>
+                                    <strong>Actual Start:</strong> 
+                                    @step.ActualStartDate.Value.ToShortDateString()
+                                </p>
+                            }
+                            @if (step.ActualCompletionDate.HasValue)
+                            {
+                                <p>
+                                    <strong>Actual Completion:</strong> 
+                                    @step.ActualCompletionDate.Value.ToShortDateString()
+                                </p>
+                            }
+                        </div>
+                    </div>
+
+                    @if (step.ResolvedParameters.DurationDays.HasValue || step.ResolvedParameters.FrequencyDays.HasValue)
+                    {
+                        <hr />
+                        <p class="mb-0"><strong>Parameters:</strong></p>
+                        <ul class="mb-0">
+                            @if (step.ResolvedParameters.DurationDays.HasValue)
+                            {
+                                <li>Duration: @step.ResolvedParameters.DurationDays days</li>
+                            }
+                            @if (step.ResolvedParameters.FrequencyDays.HasValue)
+                            {
+                                <li>Frequency: Every @step.ResolvedParameters.FrequencyDays days</li>
+                            }
+                        </ul>
+                    }
+                </div>
+                <div class="card-footer">
+                    @if (step.CurrentState == GardenTracker.Domain.Enums.WorkflowStepState.NotStarted)
+                    {
+                        <form asp-action="StartStep" method="post" class="d-inline">
+                            <input type="hidden" name="stepId" value="@step.Id" />
+                            <button type="submit" class="btn btn-primary">Start This Step</button>
+                        </form>
+                    }
+                    else if (step.CurrentState == GardenTracker.Domain.Enums.WorkflowStepState.InProgress)
+                    {
+                        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#completeModal@(step.Id)">
+                            Mark as Complete
+                        </button>
+
+                        <!-- Complete Modal -->
+                        <div class="modal fade" id="completeModal@(step.Id)" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <form asp-action="CompleteStep" method="post">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Complete @step.WorkflowStepDefinition.Name</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <input type="hidden" name="stepId" value="@step.Id" />
+                                            <div class="mb-3">
+                                                <label for="notes@(step.Id)" class="form-label">Notes (optional)</label>
+                                                <textarea name="notes" id="notes@(step.Id)" class="form-control" rows="3" 
+                                                          placeholder="Add any notes about completing this step..."></textarea>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                            <button type="submit" class="btn btn-success">Complete Step</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    }
+</div>

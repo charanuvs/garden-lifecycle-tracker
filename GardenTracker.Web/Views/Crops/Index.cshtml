@@ -1,0 +1,32 @@
+@model IEnumerable<GardenTracker.Domain.Entities.CropDefinition>
+
+@{
+    ViewData["Title"] = "Available Crops";
+}
+
+<div class="container mt-4">
+    <h1 class="mb-4">@ViewData["Title"]</h1>
+    <p class="lead">Select a crop to start growing in your garden</p>
+
+    <div class="row">
+        @foreach (var crop in Model)
+        {
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">@crop.Name</h5>
+                        <p class="card-text">@crop.Description</p>
+                        <p class="text-muted">
+                            <small>Growing Season: @crop.EstimatedGrowingSeasonDays days</small>
+                        </p>
+                    </div>
+                    <div class="card-footer">
+                        <a asp-action="Start" asp-route-id="@crop.Id" class="btn btn-primary w-100">
+                            Start Growing
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>

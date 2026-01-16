@@ -1,0 +1,55 @@
+@model GardenTracker.Web.Models.StartCropViewModel
+
+@{
+    ViewData["Title"] = "Start Growing " + Model.CropName;
+}
+
+<div class="container mt-4">
+    <h1 class="mb-4">@ViewData["Title"]</h1>
+
+    <div class="row">
+        <div class="col-md-6">
+            <form asp-action="Start" method="post">
+                <input type="hidden" asp-for="CropDefinitionId" />
+                <input type="hidden" asp-for="CropName" />
+                
+                <div class="mb-3">
+                    <label asp-for="Nickname" class="form-label">Give your crop a nickname</label>
+                    <input asp-for="Nickname" class="form-control" placeholder="e.g., My First Spinach" required />
+                    <span asp-validation-for="Nickname" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="StartDate" class="form-label">Start Date</label>
+                    <input asp-for="StartDate" type="date" class="form-control" required />
+                    <span asp-validation-for="StartDate" class="text-danger"></span>
+                    <div class="form-text">When do you want to start this crop?</div>
+                </div>
+
+                <div class="mb-3">
+                    <button type="submit" class="btn btn-success">Start Crop</button>
+                    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+                </div>
+
+                <div asp-validation-summary="All" class="text-danger"></div>
+            </form>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="alert alert-info">
+                <h5>What happens next?</h5>
+                <p>Once you start your crop, the app will:</p>
+                <ul>
+                    <li>Create a personalized workflow with all necessary steps</li>
+                    <li>Calculate planned dates for each task</li>
+                    <li>Guide you through the entire growing process</li>
+                    <li>Track your progress as you complete each step</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
