@@ -1,9 +1,11 @@
 using GardenTracker.Domain.Enums;
 using GardenTracker.Infrastructure.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GardenTracker.Web.Controllers;
 
+[Authorize]
 public class UserCropsController : Controller
 {
     private readonly CropWorkflowService _workflowService;

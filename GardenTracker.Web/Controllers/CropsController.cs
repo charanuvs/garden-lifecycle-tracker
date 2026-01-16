@@ -1,10 +1,12 @@
 using GardenTracker.Domain.Interfaces;
 using GardenTracker.Infrastructure.Services;
 using GardenTracker.Web.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GardenTracker.Web.Controllers;
 
+[Authorize]
 public class CropsController : Controller
 {
     private readonly IUnitOfWork _unitOfWork;
