@@ -1,0 +1,55 @@
+@{
+    ViewData["Title"] = "Sign In";
+    var returnUrl = ViewData["ReturnUrl"] as string ?? Url.Content("~/");
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-body p-5">
+                    <h2 class="text-center mb-4">🌱 Welcome to Garden Tracker</h2>
+                    <p class="text-center text-muted mb-4">Sign in to manage your garden lifecycle</p>
+
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger">@TempData["Error"]</div>
+                    }
+
+                    <div class="d-grid gap-3">
+                        <form asp-action="ExternalLogin" asp-route-returnUrl="@returnUrl" method="post">
+                            <button type="submit" name="provider" value="Google" class="btn btn-outline-primary btn-lg w-100">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-google me-2" viewBox="0 0 16 16">
+                                    <path d="M15.545 6.558a9.4 9.4 0 0 1 .139 1.626c0 2.434-.87 4.492-2.384 5.885h.002C11.978 15.292 10.158 16 8 16A8 8 0 1 1 8 0a7.7 7.7 0 0 1 5.352 2.082l-2.284 2.284A4.35 4.35 0 0 0 8 3.166c-2.087 0-3.86 1.408-4.492 3.304a4.8 4.8 0 0 0 0 3.063h.003c.635 1.893 2.405 3.301 4.492 3.301 1.078 0 2.004-.276 2.722-.764h-.003a3.7 3.7 0 0 0 1.599-2.431H8v-3.08z"/>
+                                </svg>
+                                Continue with Google
+                            </button>
+                        </form>
+
+                        <!-- Apple Sign-In would go here once configured -->
+                        <!--
+                        <form asp-action="ExternalLogin" asp-route-returnUrl="@returnUrl" method="post">
+                            <button type="submit" name="provider" value="Apple" class="btn btn-dark btn-lg w-100">
+                                <i class="bi bi-apple me-2"></i>
+                                Continue with Apple
+                            </button>
+                        </form>
+                        -->
+                    </div>
+
+                    <hr class="my-4">
+
+                    <p class="text-center text-muted small">
+                        By signing in, you agree to our Terms of Service and Privacy Policy
+                    </p>
+                </div>
+            </div>
+
+            <div class="text-center mt-3">
+                <a asp-controller="Home" asp-action="Index" class="text-decoration-none">
+                    &larr; Back to Home
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

@@ -7,6 +7,9 @@ namespace GardenTracker.Domain.Entities;
 /// </summary>
 public class UserCrop : BaseEntity
 {
+    public string? UserId { get; set; }
+    public ApplicationUser? User { get; set; }
+    
     public int CropDefinitionId { get; set; }
     public CropDefinition CropDefinition { get; set; } = null!;
     

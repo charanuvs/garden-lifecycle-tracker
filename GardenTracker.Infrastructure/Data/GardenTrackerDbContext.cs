@@ -1,4 +1,5 @@
 using GardenTracker.Domain.Entities;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using System.Text.Json;
@@ -6,7 +7,7 @@ using GardenTracker.Domain.ValueObjects;
 
 namespace GardenTracker.Infrastructure.Data;
 
-public class GardenTrackerDbContext : DbContext
+public class GardenTrackerDbContext : IdentityDbContext<ApplicationUser>
 {
     public GardenTrackerDbContext(DbContextOptions<GardenTrackerDbContext> options)
         : base(options)
