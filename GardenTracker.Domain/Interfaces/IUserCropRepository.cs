@@ -8,6 +8,7 @@ public interface IUserCropRepository
     Task<UserCrop?> GetWithWorkflowStepsAsync(int id);
     Task<IEnumerable<UserCrop>> GetActiveUserCropsAsync();
     Task<IEnumerable<UserCrop>> GetAllUserCropsAsync();
+    Task<IEnumerable<UserCrop>> GetAllAsync();
     Task<UserCrop> AddAsync(UserCrop userCrop);
     Task UpdateAsync(UserCrop userCrop);
     Task DeleteAsync(int id);

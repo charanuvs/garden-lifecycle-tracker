@@ -269,4 +269,56 @@ public class CropWorkflowService
     {
         return await _unitOfWork.UserCrops.GetActiveUserCropsAsync();
     }
+
+    public async Task<IEnumerable<UserCrop>> GetArchivedUserCropsAsync()
+    {
+        var allCrops = await _unitOfWork.UserCrops.GetAllAsync();
+        return allCrops.Where(c => !c.IsActive).OrderByDescending(c => c.ModifiedDate);
+    }
+
+    public async Task ArchiveCropAsync(int userCropId)
+    {
+        var userCrop = await _unitOfWork.UserCrops.GetByIdAsync(userCropId);
+        if (userCrop == null)
+        {
+            throw new InvalidOperationException($"User crop {userCropId} not found");
+        }
+
+        userCrop.IsActive = false;
+        userCrop.CompletedDate = DateTime.UtcNow;
+
+        // Disable reminders for all active steps
+        var activeSteps = await _unitOfWork.ActiveWorkflowSteps.GetByUserCropIdAsync(userCropId);
+        foreach (var step in activeSteps)
+        {
+            step.IsReminderActive = false;
+        }
+
+        await _unitOfWork.SaveChangesAsync();
+
+        _logger.LogInformation("Archived crop {CropId} - {Nickname}", userCropId, userCrop.Nickname);
+    }
+
+    public async Task UnarchiveCropAsync(int userCropId)
+    {
+        var userCrop = await _unitOfWork.UserCrops.GetByIdAsync(userCropId);
+        if (userCrop == null)
+        {
+            throw new InvalidOperationException($"User crop {userCropId} not found");
+        }
+
+        userCrop.IsActive = true;
+        userCrop.CompletedDate = null;
+
+        // Re-enable reminders for not-started steps
+        var activeSteps = await _unitOfWork.ActiveWorkflowSteps.GetByUserCropIdAsync(userCropId);
+        foreach (var step in activeSteps.Where(s => s.CurrentState == WorkflowStepState.NotStarted))
+        {
+            step.IsReminderActive = true;
+        }
+
+        await _unitOfWork.SaveChangesAsync();
+
+        _logger.LogInformation("Unarchived crop {CropId} - {Nickname}", userCropId, userCrop.Nickname);
+    }
 }

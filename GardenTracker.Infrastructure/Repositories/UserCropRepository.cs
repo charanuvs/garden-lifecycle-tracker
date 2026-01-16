@@ -43,6 +43,13 @@ public class UserCropRepository : IUserCropRepository
             .ToListAsync();
     }
 
+    public async Task<IEnumerable<UserCrop>> GetAllAsync()
+    {
+        return await _context.UserCrops
+            .Include(u => u.CropDefinition)
+            .ToListAsync();
+    }
+
     public async Task<UserCrop> AddAsync(UserCrop userCrop)
     {
         await _context.UserCrops.AddAsync(userCrop);

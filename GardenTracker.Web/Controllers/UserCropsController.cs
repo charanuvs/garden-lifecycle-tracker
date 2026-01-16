@@ -59,4 +59,45 @@ public class UserCropsController : Controller
             return RedirectToAction(nameof(Index));
         }
     }
+
+    // POST: UserCrops/Archive
+    [HttpPost]
+    public async Task<IActionResult> Archive(int id)
+    {
+        try
+        {
+            await _workflowService.ArchiveCropAsync(id);
+            TempData["Success"] = "Crop archived successfully!";
+            return RedirectToAction(nameof(Index));
+        }
+        catch (Exception ex)
+        {
+            TempData["Error"] = ex.Message;
+            return RedirectToAction(nameof(Index));
+        }
+    }
+
+    // GET: UserCrops/Archived
+    public async Task<IActionResult> Archived()
+    {
+        var archivedCrops = await _workflowService.GetArchivedUserCropsAsync();
+        return View(archivedCrops);
+    }
+
+    // POST: UserCrops/Unarchive
+    [HttpPost]
+    public async Task<IActionResult> Unarchive(int id)
+    {
+        try
+        {
+            await _workflowService.UnarchiveCropAsync(id);
+            TempData["Success"] = "Crop restored successfully!";
+            return RedirectToAction(nameof(Archived));
+        }
+        catch (Exception ex)
+        {
+            TempData["Error"] = ex.Message;
+            return RedirectToAction(nameof(Archived));
+        }
+    }
 }
