@@ -25,7 +25,7 @@ The solution follows clean architecture principles:
 - .NET 9.0
 - ASP.NET Core MVC
 - Entity Framework Core 9.0
-- SQL Server LocalDB
+- SQLite (cross-platform database)
 - Stateless (Finite State Machine library)
 - Bootstrap 5
 
@@ -34,7 +34,7 @@ The solution follows clean architecture principles:
 ### Prerequisites
 
 - .NET 9.0 SDK
-- SQL Server LocalDB (comes with Visual Studio)
+- No additional database installation required (uses SQLite)
 
 ### Setup
 

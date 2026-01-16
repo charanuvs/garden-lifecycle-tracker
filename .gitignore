@@ -32,6 +32,9 @@ ScaffoldingReadMe.txt
 *.mdf
 *.ldf
 *.ndf
+*.db
+*.db-shm
+*.db-wal
 
 # NuGet Packages
 *.nupkg
