@@ -54,8 +54,14 @@ public static class DbInitializer
                 Name = "Watering",
                 Description = "Regular watering schedule",
                 StepType = "Watering",
-                DefaultParameters = new WorkflowStepParameters(durationDays: 30, frequencyDays: 2),
-                ParameterSchema = "{\"durationDays\": \"number\", \"frequencyDays\": \"number\"}"
+                DefaultParameters = new WorkflowStepParameters(
+                    durationDays: 1, 
+                    frequencyDays: 2,
+                    isRecurring: true,
+                    recurrenceIntervalDays: 2,
+                    reminderLeadDays: 0 // Same day reminder
+                ),
+                ParameterSchema = "{\"durationDays\": \"number\", \"frequencyDays\": \"number\", \"isRecurring\": \"boolean\", \"recurrenceIntervalDays\": \"number\"}"
             },
             new()
             {

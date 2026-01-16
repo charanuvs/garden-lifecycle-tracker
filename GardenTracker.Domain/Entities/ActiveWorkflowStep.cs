@@ -23,6 +23,24 @@ public class ActiveWorkflowStep : BaseEntity
     public DateTime? ActualCompletionDate { get; set; }
     
     /// <summary>
+    /// Scheduled time range for this step (when it should be performed)
+    /// </summary>
+    public DateTime? ScheduledStartDate { get; set; }
+    public DateTime? ScheduledEndDate { get; set; }
+    
+    /// <summary>
+    /// Reminder tracking
+    /// </summary>
+    public DateTime? LastReminderSentDate { get; set; }
+    public bool IsReminderActive { get; set; } = true;
+    
+    /// <summary>
+    /// For recurring steps - indicates this is a recurring instance
+    /// </summary>
+    public bool IsRecurringInstance { get; set; }
+    public int? RecurrenceNumber { get; set; } // 1st, 2nd, 3rd occurrence
+    
+    /// <summary>
     /// Resolved parameters for this specific workflow step instance
     /// (DefaultParameters merged with crop-specific overrides)
     /// </summary>

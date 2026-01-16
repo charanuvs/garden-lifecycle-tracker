@@ -43,6 +43,13 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-6">
+                            @if (step.ScheduledStartDate.HasValue && step.ScheduledEndDate.HasValue)
+                            {
+                                <div class="alert alert-light mb-2">
+                                    <strong>⏰ Scheduled:</strong><br/>
+                                    @step.ScheduledStartDate.Value.ToString("MMM dd") - @step.ScheduledEndDate.Value.ToString("MMM dd, yyyy")
+                                </div>
+                            }
                             <p>
                                 <strong>Planned Start:</strong> 
                                 @(step.PlannedStartDate?.ToShortDateString() ?? "Not set")
@@ -70,10 +77,18 @@
                                     @step.ActualCompletionDate.Value.ToShortDateString()
                                 </p>
                             }
+                            @if (step.IsRecurringInstance && step.RecurrenceNumber.HasValue)
+                            {
+                                <p>
+                                    <strong>🔄 Recurrence:</strong> #@step.RecurrenceNumber
+                                </p>
+                            }
                         </div>
                     </div>
 
-                    @if (step.ResolvedParameters.DurationDays.HasValue || step.ResolvedParameters.FrequencyDays.HasValue)
+                    @if (step.ResolvedParameters.DurationDays.HasValue || 
+                         step.ResolvedParameters.FrequencyDays.HasValue ||
+                         step.ResolvedParameters.IsRecurring)
                     {
                         <hr />
                         <p class="mb-0"><strong>Parameters:</strong></p>
@@ -85,6 +100,15 @@
                             @if (step.ResolvedParameters.FrequencyDays.HasValue)
                             {
                                 <li>Frequency: Every @step.ResolvedParameters.FrequencyDays days</li>
+                            }
+                            @if (step.ResolvedParameters.IsRecurring)
+                            {
+                                <li>🔄 Recurring: Every @step.ResolvedParameters.RecurrenceIntervalDays days
+                                    @if (step.ResolvedParameters.MaxRecurrences.HasValue)
+                                    {
+                                        <text>(max @step.ResolvedParameters.MaxRecurrences times)</text>
+                                    }
+                                </li>
                             }
                         </ul>
                     }

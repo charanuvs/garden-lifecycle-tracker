@@ -2,16 +2,24 @@ using GardenTracker.Domain.Entities;
 using GardenTracker.Domain.Enums;
 using GardenTracker.Domain.Interfaces;
 using GardenTracker.Domain.StateMachines;
+using Microsoft.Extensions.Logging;
 
 namespace GardenTracker.Infrastructure.Services;
 
 public class CropWorkflowService
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly INotificationService _notificationService;
+    private readonly ILogger<CropWorkflowService> _logger;
 
-    public CropWorkflowService(IUnitOfWork unitOfWork)
+    public CropWorkflowService(
+        IUnitOfWork unitOfWork,
+        INotificationService notificationService,
+        ILogger<CropWorkflowService> logger)
     {
         _unitOfWork = unitOfWork;
+        _notificationService = notificationService;
+        _logger = logger;
     }
 
     public async Task<UserCrop> StartCropAsync(int cropDefinitionId, string nickname, DateTime startDate)
@@ -60,14 +68,28 @@ public class CropWorkflowService
                 WorkflowStepDefinitionId = config.WorkflowStepDefinitionId,
                 CurrentState = WorkflowStepState.NotStarted,
                 PlannedStartDate = currentPlannedDate,
-                ResolvedParameters = resolvedParams
+                ResolvedParameters = resolvedParams,
+                IsRecurringInstance = false,
+                RecurrenceNumber = resolvedParams.IsRecurring ? 1 : null
             };
 
             // Calculate planned completion date based on duration
             if (resolvedParams.DurationDays.HasValue)
             {
                 step.PlannedCompletionDate = currentPlannedDate.AddDays(resolvedParams.DurationDays.Value);
+                
+                // Set scheduled time range
+                step.ScheduledStartDate = currentPlannedDate;
+                step.ScheduledEndDate = step.PlannedCompletionDate.Value;
+                
                 currentPlannedDate = step.PlannedCompletionDate.Value;
+            }
+            else
+            {
+                // Default to a 1-day window if no duration specified
+                step.ScheduledStartDate = currentPlannedDate;
+                step.ScheduledEndDate = currentPlannedDate.AddDays(1);
+                currentPlannedDate = currentPlannedDate.AddDays(1);
             }
 
             await _unitOfWork.ActiveWorkflowSteps.AddAsync(step);
@@ -103,10 +125,19 @@ public class CropWorkflowService
         if (trigger == WorkflowStepTrigger.Start)
         {
             step.ActualStartDate = DateTime.UtcNow;
+            // Disable reminders once step is started
+            step.IsReminderActive = false;
         }
         else if (trigger == WorkflowStepTrigger.Complete)
         {
             step.ActualCompletionDate = DateTime.UtcNow;
+            step.IsReminderActive = false;
+            
+            // Handle recurring steps - create next instance
+            if (step.ResolvedParameters.IsRecurring)
+            {
+                await CreateNextRecurringStepAsync(step);
+            }
         }
 
         // Record history
@@ -126,6 +157,53 @@ public class CropWorkflowService
         await _unitOfWork.SaveChangesAsync();
 
         return step;
+    }
+
+    private async Task CreateNextRecurringStepAsync(ActiveWorkflowStep completedStep)
+    {
+        var params_ = completedStep.ResolvedParameters;
+        
+        // Check if we've reached max recurrences
+        var currentRecurrence = completedStep.RecurrenceNumber ?? 1;
+        if (params_.MaxRecurrences.HasValue && currentRecurrence >= params_.MaxRecurrences.Value)
+        {
+            _logger.LogInformation("Max recurrences reached for step {StepId}", completedStep.Id);
+            return;
+        }
+
+        // Calculate next occurrence date
+        var intervalDays = params_.RecurrenceIntervalDays ?? 1;
+        var nextStartDate = (completedStep.ActualCompletionDate ?? DateTime.UtcNow).AddDays(intervalDays);
+        var nextEndDate = nextStartDate.AddDays(params_.DurationDays ?? 1);
+
+        var nextRecurrence = new ActiveWorkflowStep
+        {
+            UserCropId = completedStep.UserCropId,
+            WorkflowStepDefinitionId = completedStep.WorkflowStepDefinitionId,
+            CurrentState = WorkflowStepState.NotStarted,
+            PlannedStartDate = nextStartDate,
+            PlannedCompletionDate = nextEndDate,
+            ScheduledStartDate = nextStartDate,
+            ScheduledEndDate = nextEndDate,
+            ResolvedParameters = params_,
+            IsRecurringInstance = true,
+            RecurrenceNumber = currentRecurrence + 1,
+            IsReminderActive = true
+        };
+
+        await _unitOfWork.ActiveWorkflowSteps.AddAsync(nextRecurrence);
+        await _unitOfWork.SaveChangesAsync();
+
+        _logger.LogInformation("Created recurring step #{Number} for {StepName}", 
+            nextRecurrence.RecurrenceNumber, 
+            completedStep.WorkflowStepDefinition.Name);
+
+        // Send notification about new recurring task
+        await _notificationService.SendRecurringStepCreatedAsync(
+            completedStep.UserCropId,
+            completedStep.WorkflowStepDefinition.Name,
+            nextRecurrence.RecurrenceNumber.Value
+        );
     }
 
     public async Task<IEnumerable<ActiveWorkflowStep>> GetNextStepsForCropAsync(int userCropId)

@@ -46,6 +46,14 @@ public class ActiveWorkflowStepRepository : IActiveWorkflowStepRepository
             .ToListAsync();
     }
 
+    public async Task<IEnumerable<ActiveWorkflowStep>> GetAllAsync()
+    {
+        return await _context.ActiveWorkflowSteps
+            .Include(a => a.WorkflowStepDefinition)
+            .Include(a => a.UserCrop)
+            .ToListAsync();
+    }
+
     public async Task<IEnumerable<ActiveWorkflowStep>> GetNextStepsAsync(int userCropId)
     {
         return await _context.ActiveWorkflowSteps

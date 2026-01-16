@@ -1,4 +1,5 @@
 using GardenTracker.Domain.Interfaces;
+using GardenTracker.Infrastructure.BackgroundServices;
 using GardenTracker.Infrastructure.Data;
 using GardenTracker.Infrastructure.Repositories;
 using GardenTracker.Infrastructure.Services;
@@ -16,6 +17,13 @@ builder.Services.AddDbContext<GardenTrackerDbContext>(options =>
 // Add repositories and services
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<CropWorkflowService>();
+builder.Services.AddScoped<ReminderService>();
+
+// Add notification service
+builder.Services.AddSingleton<INotificationService, ConsoleNotificationService>();
+
+// Add background service for daily reminders
+builder.Services.AddHostedService<DailyReminderBackgroundService>();
 
 var app = builder.Build();
 
