@@ -2,6 +2,7 @@ using GardenTracker.Domain.Enums;
 using GardenTracker.Infrastructure.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace GardenTracker.Web.Controllers;
 
@@ -15,17 +16,21 @@ public class UserCropsController : Controller
         _workflowService = workflowService;
     }
 
+    private string GetCurrentUserId() => User.FindFirstValue(ClaimTypes.NameIdentifier) ?? throw new InvalidOperationException("User not authenticated");
+
     // GET: UserCrops
     public async Task<IActionResult> Index()
     {
-        var userCrops = await _workflowService.GetAllActiveUserCropsAsync();
+        var userId = GetCurrentUserId();
+        var userCrops = await _workflowService.GetAllActiveUserCropsAsync(userId);
         return View(userCrops);
     }
 
     // GET: UserCrops/Details/5
     public async Task<IActionResult> Details(int id)
     {
-        var nextSteps = await _workflowService.GetNextStepsForCropAsync(id);
+        var userId = GetCurrentUserId();
+        var nextSteps = await _workflowService.GetNextStepsForCropAsync(id, userId);
         ViewBag.UserCropId = id;
         return View(nextSteps);
     }
@@ -36,7 +41,8 @@ public class UserCropsController : Controller
     {
         try
         {
-            var step = await _workflowService.TransitionStepAsync(stepId, WorkflowStepTrigger.Complete, notes);
+            var userId = GetCurrentUserId();
+            var step = await _workflowService.TransitionStepAsync(stepId, WorkflowStepTrigger.Complete, userId, notes);
             return RedirectToAction(nameof(Details), new { id = step.UserCropId });
         }
         catch (Exception ex)
@@ -52,7 +58,8 @@ public class UserCropsController : Controller
     {
         try
         {
-            var step = await _workflowService.TransitionStepAsync(stepId, WorkflowStepTrigger.Start);
+            var userId = GetCurrentUserId();
+            var step = await _workflowService.TransitionStepAsync(stepId, WorkflowStepTrigger.Start, userId);
             return RedirectToAction(nameof(Details), new { id = step.UserCropId });
         }
         catch (Exception ex)
@@ -68,7 +75,8 @@ public class UserCropsController : Controller
     {
         try
         {
-            await _workflowService.ArchiveCropAsync(id);
+            var userId = GetCurrentUserId();
+            await _workflowService.ArchiveCropAsync(id, userId);
             TempData["Success"] = "Crop archived successfully!";
             return RedirectToAction(nameof(Index));
         }
@@ -82,7 +90,8 @@ public class UserCropsController : Controller
     // GET: UserCrops/Archived
     public async Task<IActionResult> Archived()
     {
-        var archivedCrops = await _workflowService.GetArchivedUserCropsAsync();
+        var userId = GetCurrentUserId();
+        var archivedCrops = await _workflowService.GetArchivedUserCropsAsync(userId);
         return View(archivedCrops);
     }
 
@@ -92,7 +101,8 @@ public class UserCropsController : Controller
     {
         try
         {
-            await _workflowService.UnarchiveCropAsync(id);
+            var userId = GetCurrentUserId();
+            await _workflowService.UnarchiveCropAsync(id, userId);
             TempData["Success"] = "Crop restored successfully!";
             return RedirectToAction(nameof(Archived));
         }

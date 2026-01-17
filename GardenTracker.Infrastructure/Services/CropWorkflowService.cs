@@ -22,7 +22,7 @@ public class CropWorkflowService
         _logger = logger;
     }
 
-    public async Task<UserCrop> StartCropAsync(int cropDefinitionId, string nickname, DateTime startDate)
+    public async Task<UserCrop> StartCropAsync(int cropDefinitionId, string nickname, DateTime startDate, string userId)
     {
         var cropDefinition = await _unitOfWork.CropDefinitions.GetWithWorkflowsAsync(cropDefinitionId);
         if (cropDefinition == null)
@@ -36,7 +36,8 @@ public class CropWorkflowService
             CropDefinitionId = cropDefinitionId,
             Nickname = nickname,
             StartDate = startDate,
-            IsActive = true
+            IsActive = true,
+            UserId = userId
         };
 
         await _unitOfWork.UserCrops.AddAsync(userCrop);
@@ -98,12 +99,19 @@ public class CropWorkflowService
         await _unitOfWork.SaveChangesAsync();
     }
 
-    public async Task<ActiveWorkflowStep> TransitionStepAsync(int stepId, WorkflowStepTrigger trigger, string? notes = null)
+    public async Task<ActiveWorkflowStep> TransitionStepAsync(int stepId, WorkflowStepTrigger trigger, string userId, string? notes = null)
     {
         var step = await _unitOfWork.ActiveWorkflowSteps.GetWithHistoryAsync(stepId);
         if (step == null)
         {
             throw new InvalidOperationException($"Active workflow step {stepId} not found");
+        }
+
+        // Verify ownership
+        var userCrop = await _unitOfWork.UserCrops.GetByIdAsync(step.UserCropId);
+        if (userCrop == null || userCrop.UserId != userId)
+        {
+            throw new UnauthorizedAccessException($"User does not have access to this crop");
         }
 
         // Create state machine and validate transition
@@ -206,12 +214,18 @@ public class CropWorkflowService
         );
     }
 
-    public async Task<IEnumerable<ActiveWorkflowStep>> GetNextStepsForCropAsync(int userCropId)
+    public async Task<IEnumerable<ActiveWorkflowStep>> GetNextStepsForCropAsync(int userCropId, string userId)
     {
         var userCrop = await _unitOfWork.UserCrops.GetWithWorkflowStepsAsync(userCropId);
         if (userCrop == null)
         {
             throw new InvalidOperationException($"User crop {userCropId} not found");
+        }
+
+        // Verify ownership
+        if (userCrop.UserId != userId)
+        {
+            throw new UnauthorizedAccessException($"User does not have access to this crop");
         }
 
         var cropDefinition = await _unitOfWork.CropDefinitions.GetWithWorkflowsAsync(userCrop.CropDefinitionId);
@@ -265,23 +279,30 @@ public class CropWorkflowService
         return nextSteps.OrderBy(s => s.PlannedStartDate);
     }
 
-    public async Task<IEnumerable<UserCrop>> GetAllActiveUserCropsAsync()
+    public async Task<IEnumerable<UserCrop>> GetAllActiveUserCropsAsync(string userId)
     {
-        return await _unitOfWork.UserCrops.GetActiveUserCropsAsync();
+        var allActiveCrops = await _unitOfWork.UserCrops.GetActiveUserCropsAsync();
+        return allActiveCrops.Where(c => c.UserId == userId);
     }
 
-    public async Task<IEnumerable<UserCrop>> GetArchivedUserCropsAsync()
+    public async Task<IEnumerable<UserCrop>> GetArchivedUserCropsAsync(string userId)
     {
         var allCrops = await _unitOfWork.UserCrops.GetAllAsync();
-        return allCrops.Where(c => !c.IsActive).OrderByDescending(c => c.ModifiedDate);
+        return allCrops.Where(c => !c.IsActive && c.UserId == userId).OrderByDescending(c => c.ModifiedDate);
     }
 
-    public async Task ArchiveCropAsync(int userCropId)
+    public async Task ArchiveCropAsync(int userCropId, string userId)
     {
         var userCrop = await _unitOfWork.UserCrops.GetByIdAsync(userCropId);
         if (userCrop == null)
         {
             throw new InvalidOperationException($"User crop {userCropId} not found");
+        }
+
+        // Verify ownership
+        if (userCrop.UserId != userId)
+        {
+            throw new UnauthorizedAccessException($"User does not have access to this crop");
         }
 
         userCrop.IsActive = false;
@@ -299,12 +320,18 @@ public class CropWorkflowService
         _logger.LogInformation("Archived crop {CropId} - {Nickname}", userCropId, userCrop.Nickname);
     }
 
-    public async Task UnarchiveCropAsync(int userCropId)
+    public async Task UnarchiveCropAsync(int userCropId, string userId)
     {
         var userCrop = await _unitOfWork.UserCrops.GetByIdAsync(userCropId);
         if (userCrop == null)
         {
             throw new InvalidOperationException($"User crop {userCropId} not found");
+        }
+
+        // Verify ownership
+        if (userCrop.UserId != userId)
+        {
+            throw new UnauthorizedAccessException($"User does not have access to this crop");
         }
 
         userCrop.IsActive = true;

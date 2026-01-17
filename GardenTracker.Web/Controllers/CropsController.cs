@@ -3,6 +3,7 @@ using GardenTracker.Infrastructure.Services;
 using GardenTracker.Web.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace GardenTracker.Web.Controllers;
 
@@ -17,6 +18,8 @@ public class CropsController : Controller
         _unitOfWork = unitOfWork;
         _workflowService = workflowService;
     }
+
+    private string GetCurrentUserId() => User.FindFirstValue(ClaimTypes.NameIdentifier) ?? throw new InvalidOperationException("User not authenticated");
 
     // GET: Crops
     public async Task<IActionResult> Index()
@@ -56,10 +59,12 @@ public class CropsController : Controller
 
         try
         {
+            var userId = GetCurrentUserId();
             var userCrop = await _workflowService.StartCropAsync(
                 model.CropDefinitionId,
                 model.Nickname,
-                model.StartDate);
+                model.StartDate,
+                userId);
 
             return RedirectToAction("Details", "UserCrops", new { id = userCrop.Id });
         }
